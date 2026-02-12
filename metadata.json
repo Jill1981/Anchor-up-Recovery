@@ -1,0 +1,8 @@
+{
+  "name": "Anchor - Recovery & Crisis Support",
+  "description": "A compassionate AI-powered companion for those in recovery, offering immediate 24/7 voice and text support to navigate moments of crisis and prevent relapse.",
+  "requestFramePermissions": [
+    "microphone",
+    "geolocation"
+  ]
+}
