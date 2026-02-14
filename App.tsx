@@ -15,7 +15,8 @@ import ScriptureBank from './components/ScriptureBank';
 import Profile from './components/Profile';
 import SponsorChat from './components/SponsorChat';
 import Meetings from './components/Meetings';
-import TwelveSteps from './components/TwelveSteps';
+import MeetingRoom from './components/MeetingRoom';
+import VideoCall from './components/VideoCall';
 
 const AnchorCrossIllustration = () => (
   <div className="relative w-48 h-48 mx-auto mb-6 flex items-center justify-center">
@@ -50,6 +51,8 @@ const INITIAL_USER: UserProfile = {
 const App: React.FC = () => {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [currentView, setCurrentView] = useState<View>(View.HOME);
+  const [activeCallPeer, setActiveCallPeer] = useState<{name: string, title: string} | null>(null);
+  const [activeMeeting, setActiveMeeting] = useState<any>(null);
   const [loginForm, setLoginForm] = useState({ 
     name: '', 
     titlePrefix: 'Sister' as 'Sister' | 'Brother' | '', 
@@ -81,6 +84,35 @@ const App: React.FC = () => {
     if (confirm("Are you sure you want to log out? Your local progress will be saved.")) {
       setUser(null);
     }
+  };
+
+  const handleShareApp = async () => {
+    const shareData = {
+      title: 'Anchor Up Recovery',
+      text: 'If you are struggling or in crisis, Anchor is here to support you. Find light in the darkness.',
+      url: window.location.href
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(window.location.href);
+        alert('App link copied to clipboard. Share it with someone in need!');
+      }
+    } catch (err) {
+      console.error('Error sharing:', err);
+    }
+  };
+
+  const startVideoCall = (volunteer: any) => {
+    setActiveCallPeer({ name: volunteer.name, title: volunteer.title });
+    setCurrentView(View.VIDEO_CALL);
+  };
+
+  const handleJoinMeeting = (meeting: any) => {
+    setActiveMeeting(meeting);
+    setCurrentView(View.MEETING_ROOM);
   };
 
   if (!user) {
@@ -148,16 +180,6 @@ const App: React.FC = () => {
               </button>
             </div>
 
-            {user.pendingSponsorId && !user.assignedSponsorId && (
-              <div className="bg-amber-900/40 border border-amber-500/50 rounded-3xl p-4 flex items-center justify-between shadow-sm">
-                 <div className="flex items-center space-x-3">
-                    <div className="text-amber-400"><Icons.Calendar /></div>
-                    <span className="text-[10px] font-black text-amber-100 uppercase tracking-widest">Sponsorship Pending</span>
-                 </div>
-                 <button onClick={() => saveUser({...user, assignedSponsorId: user.pendingSponsorId, pendingSponsorId: undefined})} className="bg-amber-500 text-white text-[8px] font-black px-3 py-1.5 rounded-xl uppercase tracking-widest">Simulate Accept</button>
-              </div>
-            )}
-
             <div className="bg-slate-900 rounded-[48px] p-8 text-white shadow-2xl relative overflow-hidden border border-sky-500/20">
                 <div className="absolute top-0 right-0 p-8 opacity-10"><span className="text-9xl font-black">✝</span></div>
                 <div className="relative z-10">
@@ -166,60 +188,37 @@ const App: React.FC = () => {
                         <h4 className="text-7xl font-black tracking-tighter glow-text">{daysSober}</h4>
                         <span className="text-xl font-black text-sky-300 italic">Days</span>
                     </div>
-                    <div className="mt-8 p-4 bg-white/5 rounded-2xl border border-white/5">
-                        <p className="font-scriptural text-xs italic text-sky-100 opacity-80 leading-relaxed">"As iron sharpens iron, so one person sharpens another." — Proverbs 27:17</p>
-                    </div>
                 </div>
             </div>
 
-            {/* Prominent Donation CTA */}
-            <div className="bg-emerald-900/40 rounded-[32px] p-6 border border-emerald-500/30 flex flex-col space-y-4 shadow-xl">
-              <div className="flex items-center space-x-3">
-                <div className="text-emerald-400"><Icons.Heart /></div>
-                <h3 className="text-sm font-black uppercase tracking-tight text-white">Fund the Rescue</h3>
+            {/* Fellowship Integrated Tile */}
+            <div className="bg-sky-900 rounded-[32px] p-6 border border-sky-500/30 flex flex-col space-y-4 shadow-xl">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="p-3 bg-sky-600 rounded-2xl text-white shadow-lg animate-pulse-slow">🎥</div>
+                  <h3 className="text-sm font-black uppercase tracking-tight text-white">Live Fellowship</h3>
+                </div>
+                <span className="bg-sky-400/20 text-sky-400 px-3 py-1 rounded-xl text-[8px] font-black tracking-widest animate-pulse">LIVE NOW</span>
               </div>
-              <p className="text-[11px] text-emerald-200/70 italic leading-relaxed font-medium">Help Sister Jill pull another soul off the streets tonight. Every dollar provides safe harbor, hygiene, and hope.</p>
+              <p className="text-[11px] text-sky-200/70 italic leading-relaxed font-medium">Daily Devotional with Sister Jill is currently in session. Join the room to connect with others.</p>
               <button 
-                onClick={() => setCurrentView(View.OUTREACH)} 
-                className="bg-emerald-600 text-white py-4 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-lg hover:bg-emerald-500 transition-all active:scale-95"
+                onClick={() => setCurrentView(View.MEETINGS)} 
+                className="bg-white text-sky-950 py-4 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-lg hover:bg-sky-100 transition-all active:scale-95"
               >
-                Donate Now
+                Go to Fellowship Hall
               </button>
             </div>
 
             <div className="grid grid-cols-2 gap-4 pb-24">
-              <button onClick={() => setCurrentView(View.PEER_CONNECT)} className="col-span-2 bg-orange-600 p-6 rounded-[32px] text-white shadow-xl flex items-center justify-between animate-bounce-subtle">
+              <button onClick={() => setCurrentView(View.PEER_CONNECT)} className="col-span-2 bg-orange-600 p-6 rounded-[32px] text-white shadow-xl flex items-center justify-between border border-orange-500/20">
                 <div className="flex items-center space-x-4 text-left">
                   <div className="bg-white/20 p-4 rounded-2xl"><Icons.Phone /></div>
                   <div>
-                    <h3 className="font-black uppercase tracking-tight text-lg leading-tight">Human Fellowship</h3>
-                    <p className="text-[10px] opacity-70 font-bold uppercase tracking-tighter">Talk to a real peer</p>
+                    <h3 className="font-black uppercase tracking-tight">Human Fellowship</h3>
+                    <p className="text-[10px] opacity-70 font-bold uppercase tracking-tighter">Talk to a peer</p>
                   </div>
                 </div>
-                <span className="bg-white text-orange-600 px-4 py-2 rounded-xl text-xs font-black">LIVE</span>
-              </button>
-
-              {/* NEW Zoom Meetings Tile */}
-              <button onClick={() => setCurrentView(View.MEETINGS)} className="col-span-2 bg-sky-900 p-6 rounded-[32px] text-white shadow-xl flex items-center justify-between border border-sky-500/30">
-                <div className="flex items-center space-x-4 text-left">
-                  <div className="bg-white/10 p-4 rounded-2xl">🎥</div>
-                  <div>
-                    <h3 className="font-black uppercase tracking-tight">Live Fellowship</h3>
-                    <p className="text-[10px] opacity-70 font-bold uppercase tracking-tighter">Daily Zoom Meetings</p>
-                  </div>
-                </div>
-                <span className="text-xs">👋</span>
-              </button>
-
-              <button onClick={() => setCurrentView(View.TWELVE_STEPS)} className="col-span-2 bg-indigo-900 p-6 rounded-[32px] text-white shadow-xl flex items-center justify-between border border-indigo-500/30">
-                <div className="flex items-center space-x-4 text-left">
-                  <div className="bg-white/10 p-4 rounded-2xl">👣</div>
-                  <div>
-                    <h3 className="font-black uppercase tracking-tight">Step Studies</h3>
-                    <p className="text-[10px] opacity-70 font-bold uppercase tracking-tighter">The path to restoration</p>
-                  </div>
-                </div>
-                <span className="text-xs">📖</span>
+                <span className="bg-white text-orange-600 px-4 py-2 rounded-xl text-xs font-black">24/7</span>
               </button>
 
               <button onClick={() => setCurrentView(View.JOURNAL)} className="col-span-1 bg-slate-900/50 p-6 rounded-[32px] text-white shadow-xl flex flex-col items-center justify-center border border-indigo-500/30 space-y-2">
@@ -237,10 +236,10 @@ const App: React.FC = () => {
                   <div className="bg-white/10 p-4 rounded-2xl"><Icons.Heart /></div>
                   <div>
                     <h3 className="font-black uppercase tracking-tight text-sm">Safe Harbor Mission</h3>
-                    <p className="text-[9px] opacity-70 font-bold uppercase tracking-tighter">See our impact on the streets</p>
+                    <p className="text-[9px] opacity-70 font-bold uppercase tracking-tighter">Support street outreach</p>
                   </div>
                 </div>
-                <span className="text-xs">🤝</span>
+                <span className="text-xs">⚓</span>
               </button>
 
               <button onClick={() => setCurrentView(View.VOICE_SUPPORT)} className="bg-slate-800 p-6 rounded-[32px] border border-slate-700 flex flex-col items-center justify-center space-y-2">
@@ -252,11 +251,6 @@ const App: React.FC = () => {
                 <Icons.Users />
                 <span className="font-black text-[9px] uppercase tracking-widest">Broken Chains</span>
               </button>
-              
-              <button onClick={() => setCurrentView(user.assignedSponsorId ? View.SPONSOR_CHAT : View.SPONSOR_MATCH)} className="bg-indigo-900 p-6 rounded-[32px] border border-indigo-700 flex flex-col items-center justify-center space-y-2 col-span-2">
-                <Icons.User />
-                <span className="font-black text-[10px] uppercase tracking-[0.2em]">{user.assignedSponsorId ? "Chat Sponsor" : "Find a Sponsor"}</span>
-              </button>
             </div>
           </div>
         );
@@ -264,7 +258,7 @@ const App: React.FC = () => {
       case View.TEXT_SUPPORT: return <TextSupport />;
       case View.TOOLS: return <Tools />;
       case View.RESOURCES: return <Resources />;
-      case View.PEER_CONNECT: return <PeerConnect user={user} />;
+      case View.PEER_CONNECT: return <PeerConnect user={user} onStartVideoCall={startVideoCall} />;
       case View.OUTREACH: return <Outreach />;
       case View.TESTIMONIES: return <Testimonies user={user} />;
       case View.SPONSOR_MATCH: return <SponsorMatch user={user} onSelectSponsor={(id) => saveUser({...user, pendingSponsorId: id})} />;
@@ -272,8 +266,9 @@ const App: React.FC = () => {
       case View.JOURNAL: return <Journal user={user} onUpdateEntries={(entries) => saveUser({...user, journalEntries: entries})} />;
       case View.SCRIPTURE_BANK: return <ScriptureBank user={user} onUpdateEntries={(entries) => saveUser({...user, journalEntries: entries})} />;
       case View.PROFILE: return <Profile user={user} onNavigate={setCurrentView} onLogout={handleLogout} />;
-      case View.MEETINGS: return <Meetings />;
-      case View.TWELVE_STEPS: return <TwelveSteps />;
+      case View.MEETINGS: return <Meetings onJoinMeeting={handleJoinMeeting} />;
+      case View.MEETING_ROOM: return <MeetingRoom meetingTitle={activeMeeting?.title || "Fellowship Hall"} onLeave={() => setCurrentView(View.MEETINGS)} />;
+      case View.VIDEO_CALL: return activeCallPeer ? <VideoCall peerName={activeCallPeer.name} peerTitle={activeCallPeer.title} onEnd={() => setCurrentView(View.PEER_CONNECT)} /> : null;
       default: return null;
     }
   };
@@ -283,7 +278,7 @@ const App: React.FC = () => {
       <div className="absolute top-0 w-full bg-black px-4 py-1.5 text-[8px] text-white text-center font-black z-40 uppercase tracking-[0.4em] border-b border-sky-900/30">
         Anchor up Recovery • Founded by Sister Jill Demoran
       </div>
-      {currentView !== View.HOME && (
+      {currentView !== View.HOME && currentView !== View.VIDEO_CALL && currentView !== View.MEETING_ROOM && (
         <header className="p-4 flex items-center glass sticky top-0 z-20 mt-8">
           <button onClick={() => setCurrentView(View.HOME)} className="p-3 hover:bg-slate-800 rounded-2xl transition-colors text-white">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
@@ -291,27 +286,29 @@ const App: React.FC = () => {
           <h2 className="ml-4 font-black text-white text-lg uppercase tracking-tight">{currentView.replace('_', ' ').toLowerCase()}</h2>
         </header>
       )}
-      <main className={`flex-1 overflow-y-auto ${currentView === View.HOME ? 'mt-8' : ''}`}>
+      <main className={`flex-1 overflow-y-auto ${currentView === View.HOME || currentView === View.VIDEO_CALL || currentView === View.MEETING_ROOM ? 'mt-8' : ''}`}>
         {renderView()}
       </main>
-      <nav className="glass border-t border-slate-800 p-4 flex justify-around items-center sticky bottom-0 z-30 pb-8">
-        <button onClick={() => setCurrentView(View.HOME)} className={`flex flex-col items-center space-y-1 ${currentView === View.HOME ? 'text-sky-400' : 'text-slate-600'}`}>
-          <Icons.Home />
-          <span className="text-[8px] font-black uppercase tracking-widest">Home</span>
-        </button>
-        <button onClick={() => setCurrentView(View.JOURNAL)} className={`flex flex-col items-center space-y-1 ${currentView === View.JOURNAL ? 'text-sky-400' : 'text-slate-600'}`}>
-          <span className="text-xl">📓</span>
-          <span className="text-[8px] font-black uppercase tracking-widest">Journal</span>
-        </button>
-        <button onClick={() => setCurrentView(View.PEER_CONNECT)} className={`flex flex-col items-center space-y-1 ${currentView === View.PEER_CONNECT ? 'text-sky-400' : 'text-slate-600'}`}>
-          <Icons.Users />
-          <span className="text-[8px] font-black uppercase tracking-widest">Fellowship</span>
-        </button>
-        <button onClick={() => setCurrentView(View.PROFILE)} className={`flex flex-col items-center space-y-1 ${currentView === View.PROFILE ? 'text-sky-400' : 'text-slate-600'}`}>
-          <Icons.User />
-          <span className="text-[8px] font-black uppercase tracking-widest">Profile</span>
-        </button>
-      </nav>
+      {currentView !== View.VIDEO_CALL && currentView !== View.MEETING_ROOM && (
+        <nav className="glass border-t border-slate-800 p-4 flex justify-around items-center sticky bottom-0 z-30 pb-8">
+          <button onClick={() => setCurrentView(View.HOME)} className={`flex flex-col items-center space-y-1 ${currentView === View.HOME ? 'text-sky-400' : 'text-slate-600'}`}>
+            <Icons.Home />
+            <span className="text-[8px] font-black uppercase tracking-widest">Home</span>
+          </button>
+          <button onClick={() => setCurrentView(View.JOURNAL)} className={`flex flex-col items-center space-y-1 ${currentView === View.JOURNAL ? 'text-sky-400' : 'text-slate-600'}`}>
+            <span className="text-xl">📓</span>
+            <span className="text-[8px] font-black uppercase tracking-widest">Journal</span>
+          </button>
+          <button onClick={() => setCurrentView(View.PEER_CONNECT)} className={`flex flex-col items-center space-y-1 ${currentView === View.PEER_CONNECT ? 'text-sky-400' : 'text-slate-600'}`}>
+            <Icons.Users />
+            <span className="text-[8px] font-black uppercase tracking-widest">Fellowship</span>
+          </button>
+          <button onClick={() => setCurrentView(View.PROFILE)} className={`flex flex-col items-center space-y-1 ${currentView === View.PROFILE ? 'text-sky-400' : 'text-slate-600'}`}>
+            <Icons.User />
+            <span className="text-[8px] font-black uppercase tracking-widest">Profile</span>
+          </button>
+        </nav>
+      )}
       <div className="absolute top-0 w-full bg-yellow-950/20 px-4 py-1 text-[8px] text-yellow-500 text-center z-40">
         Companion. Not a medical replacement. In danger? Call 988.
       </div>

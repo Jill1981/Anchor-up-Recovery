@@ -16,7 +16,9 @@ export enum View {
   OUTREACH = 'OUTREACH',
   PEER_CONNECT = 'PEER_CONNECT',
   JOURNAL = 'JOURNAL',
-  MEETINGS = 'MEETINGS'
+  MEETINGS = 'MEETINGS',
+  VIDEO_CALL = 'VIDEO_CALL',
+  MEETING_ROOM = 'MEETING_ROOM'
 }
 
 export type TestimonyCategory = 'Substances' | 'Food' | 'Sex' | 'Sexual Confusion' | 'Other';
